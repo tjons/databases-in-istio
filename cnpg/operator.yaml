@@ -1,0 +1,35 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-apiserver
+  namespace: cnpg-system 
+spec: 
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: cnpg
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        ports: ["9443"]
+   # from:
+   # - source:
+   #     ipBlocks:
+   #     - 172.18.0.5 
+
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication 
+metadata:
+  name: cnpg-operator
+  namespace: cnpg-system 
+spec: 
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: cnpg
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    9443:
+      mode: PERMISSIVE
+

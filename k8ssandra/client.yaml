@@ -1,0 +1,35 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: cassandra-client-allow
+  namespace: cassandra-cluster
+spec: 
+  selector:
+    matchLabels:
+      cassandra.datastax.com/cluster: demo-cassandra
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        serviceAccounts:
+        - cassandra-client/default 
+    to:
+      - operation:
+          ports: ["9042"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: cql-client
+  name: cql-client
+  namespace: cassandra-client
+spec:
+  containers:
+  - image: cassandra:5.0.5
+    command: ["sleep", "infinity"]
+    name: cql-client
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}

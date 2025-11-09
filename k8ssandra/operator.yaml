@@ -1,0 +1,35 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-apiserver
+  namespace: k8ssandra-operator 
+spec: 
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: k8ssandra-operator
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        ports: ["9443"]
+   # from:
+   # - source:
+   #     ipBlocks:
+   #     - 172.18.0.5 
+
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication 
+metadata:
+  name: cassandra-operators
+  namespace: k8ssandra-operator 
+spec: 
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: k8ssandra-operator
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    9443:
+      mode: PERMISSIVE
+

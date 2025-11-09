@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: example-creds
+  namespace: cnpg-cluster
+type: Opaque
+stringData:
+  username: example-user
+  password: example-insecure
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: cnpg-cluster-allow
+  namespace: cnpg-cluster
+spec: 
+  selector:
+    matchLabels:
+      cnpg.io/cluster: example-pg
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        serviceAccounts:
+        - cnpg-system/cnpg-cloudnative-pg 
+    to:
+      - operation:
+          ports: ["8000"]
+  - from:
+    - source:
+        serviceAccounts:
+        - example-pg
+    to:
+      - operation:
+          ports: ["5432"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: example-cnpg-node
+  namespace: cnpg-cluster
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: status 
+      port: 8000
+      targetPort: 8000
+  publishNotReadyAddresses: true
+  selector:
+    cnpg.io/cluster: example-pg
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: example-pg
+  namespace: cnpg-cluster
+spec:
+  instances: 3
+  bootstrap:
+    initdb:
+      database: example
+      owner: example-user
+      secret:
+        name: example-creds
+  storage:
+    size: 32Mi
+    storageClass: "standard"
